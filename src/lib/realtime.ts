@@ -11,6 +11,7 @@ const message = z.object({
   token: z.string().optional(),
   imageBase64: z.string().optional(),
   imageType: z.string().optional(),
+  shouldFetch: z.boolean().optional(),
 })
 
 const schema = {

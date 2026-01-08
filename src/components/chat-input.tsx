@@ -31,7 +31,7 @@ export function ChatInput({ onSend, isPending }: ChatInputProps) {
                 img.onload = () => {
                     const canvas = document.createElement("canvas")
                     let { width, height } = img
-                    const maxDim = 1200
+                    const maxDim = 1024
                     if (width > maxDim || height > maxDim) {
                         if (width > height) {
                             height = (height / width) * maxDim
@@ -45,7 +45,7 @@ export function ChatInput({ onSend, isPending }: ChatInputProps) {
                     canvas.height = height
                     const ctx = canvas.getContext("2d")!
                     ctx.drawImage(img, 0, 0, width, height)
-                    const base64 = canvas.toDataURL("image/jpeg", 0.8)
+                    const base64 = canvas.toDataURL("image/jpeg", 0.7)
 
                     setImageData({
                         base64: base64.split(",")[1],

@@ -88,6 +88,7 @@ const Page = () => {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
+    refetchInterval: 3000,
   })
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -156,6 +157,15 @@ const Page = () => {
     events: ["chat.message", "chat.destroy"],
     onData: ({ event, data }) => {
       if (event === "chat.message") {
+        const msg = data as Message & { shouldFetch?: boolean }
+
+        // OPTIMIZATION: If payload was too large, server sends "shouldFetch" signal.
+        // We trigger a refetch to get the full image from Redis.
+        if (msg.shouldFetch) {
+          queryClient.invalidateQueries({ queryKey: ["messages", roomId] })
+          return
+        }
+
         // OPTIMIZATION: Append new message directly to cache
         queryClient.setQueryData(
           ["messages", roomId],

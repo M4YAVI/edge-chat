@@ -68,7 +68,16 @@ const messages = new Elysia({ prefix: "/messages" })
 
       // add message to history
       await redis.rpush(`messages:${roomId}`, { ...message, token: auth.token })
-      await realtime.channel(roomId).emit("chat.message", message)
+
+      // OPTIMIZATION: If payload is large, strip image and signal fetch.
+      // Lowered limit to 10KB to prevent ANY socket stability issues with base64.
+      if (payload.imageBase64 && payload.imageBase64.length > 10000) {
+        delete payload.imageBase64
+        // @ts-ignore - dynamic property for client coordination
+        payload.shouldFetch = true
+      }
+
+      await realtime.channel(roomId).emit("chat.message", payload)
 
       // housekeeping
       const remaining = await redis.ttl(`meta:${roomId}`)
@@ -83,11 +92,12 @@ const messages = new Elysia({ prefix: "/messages" })
         id: z.string().optional(),
         sender: z.string().max(100),
         text: z.string().max(5000),
-        imageBase64: z.string().max(3000000).optional(), // ~2MB base64
+        imageBase64: z.string().max(15000000).optional(), // ~11MB base64 limit
         imageType: z.string().max(50).optional(),
       }),
     }
   )
+
   .get(
     "/",
     async ({ auth }) => {
